@@ -10,9 +10,12 @@ import Spinner     from '../Spinner/Spinner.jsx';
 import Message     from '../Message/Message.jsx';
 import CountryItem from '../CountryItem/CountryItem.jsx';
 import styles      from './CountriesList.module.css';
+import { useCities } from '../../contexts/CitiesContext.jsx';
 
 
-function CountriesList({ cities, isLoading }) {
+function CountriesList() {
+	const { cities, isLoading } = useCities()
+	
 	if (isLoading) return <Spinner />;
 	
 	if (!cities.length) return <Message
