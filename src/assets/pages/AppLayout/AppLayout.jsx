@@ -6,9 +6,9 @@
  *  "Family is where life begins and love never ends."
  */
 
-import styles from './AppLayout.module.css';
-import Sidebar from '../components/Sidebar.jsx';
-import Map from './Map.jsx';
+import styles  from './AppLayout.module.css';
+import Sidebar from '../../components/Sidebar/Sidebar.jsx';
+import Map     from '../../components/Map/Map.jsx';
 
 
 function AppLayout() {
