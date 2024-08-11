@@ -7,21 +7,86 @@
  */
 
 
-import styles                           from './Map.module.css';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import styles                                                           from './Map.module.css';
+import { useNavigate, useSearchParams }                                 from 'react-router-dom';
+import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import {
+	useCities
+}                                                                       from '../../contexts/CitiesContext.jsx';
+import { useEffect, useState }                                          from 'react';
+import {
+	useGeolocation
+}                                                                       from '../../hooks/useGeolocation.js';
+import Button                                                           from '../Button/Button.jsx';
 
 
 function Map() {
-	const [searchParams, setSearchParams] = useSearchParams()
-	const lat = searchParams.get('lat')
-	const lng = searchParams.get('lng')
+	const { cities } = useCities();
+	const [position, setPosition] = useState([0, 0]);
+	const [searchParams, setSearchParams] = useSearchParams();
+	const {
+					isLoading: isLoadingPosition,
+					getPosition,
+					position: geolocationPosition
+				} = useGeolocation();
 	
-	const navigator = useNavigate()
+	const lat = searchParams.get('lat');
+	const lng = searchParams.get('lng');
 	
-	return <div className={styles.mapContainer} onClick={() => navigator('form')}>
-		<h1>{lat}/{lng}</h1>
-		<button onClick={() => setSearchParams({lat: 3, lng: 4})}>change position</button>
+	useEffect(() => {
+		if (lat && lng) setPosition([lat, lng]);
+	}, [lat, lng]);
+	
+	useEffect(() => {
+		if (geolocationPosition) setPosition([geolocationPosition.lat, geolocationPosition.lng]);
+	}, [geolocationPosition]);
+	
+	return <div className={styles.mapContainer}>
+		{!geolocationPosition && <Button type="position" onClick={getPosition}>
+			{isLoadingPosition ? 'Loading...' : 'Use your location'}
+		</Button>}
+		
+		<MapContainer className={styles.map} center={position} zoom={8} scrollWheelZoom={true}>
+			<TileLayer
+					attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+					url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+			/>
+			
+			{
+				cities.map(city => {
+					const { cityName, position: { lat, lng }, id } = city;
+					const pos = [lat, lng];
+					return <Marker position={pos} key={id}>
+						<Popup>
+							{cityName}
+						</Popup>
+					</Marker>;
+				})
+			}
+			
+			<ChangePosition position={position} />
+			<ClickDetecter />
+		</MapContainer>
 	</div>;
+}
+
+function ChangePosition({ position }) {
+	const map = useMap();
+	map.setView(position);
+	return null;
+}
+
+function ClickDetecter() {
+	const navigate = useNavigate();
+	
+	useMapEvents({
+								 click: e => {
+									 console.log(e);
+									 return navigate(`form?lat=${e.latlng.lat}&lng=${e.latlng.lng}`);
+								 }
+							 });
+	
+	return null;
 }
 
 export default Map;
